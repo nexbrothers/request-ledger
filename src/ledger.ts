@@ -44,7 +44,10 @@ export class RequestLedger {
   private readonly hooks: LedgerHooks;
   private readonly idempotencyHeader: string;
   private readonly replayEngine: ReplayEngine;
+  private readonly autoProcess: boolean;
+  private readonly autoProcessOptions: ProcessOptions;
   private isDestroyed = false;
+  private onlineHandler: (() => void) | null = null;
 
   constructor(config: LedgerConfig = {}) {
     // Initialize storage
@@ -62,6 +65,10 @@ export class RequestLedger {
     // Set idempotency header
     this.idempotencyHeader = config.idempotencyHeader ?? DEFAULT_IDEMPOTENCY_HEADER;
     
+    // Set auto-process options
+    this.autoProcess = config.autoProcess ?? false;
+    this.autoProcessOptions = config.autoProcessOptions ?? {};
+    
     // Initialize replay engine
     this.replayEngine = new ReplayEngine({
       storage: this.storage,
@@ -70,6 +77,29 @@ export class RequestLedger {
       hooks: this.hooks,
       idempotencyHeader: this.idempotencyHeader,
     });
+    
+    // Set up auto-processing if enabled
+    if (this.autoProcess && typeof window !== 'undefined') {
+      this.setupAutoProcess();
+    }
+  }
+
+  /**
+   * Set up automatic processing when coming back online.
+   */
+  private setupAutoProcess(): void {
+    this.onlineHandler = () => {
+      if (!this.isDestroyed) {
+        // Use setTimeout to avoid blocking the event
+        setTimeout(() => {
+          this.process(this.autoProcessOptions).catch((error) => {
+            console.error('[request-ledger] Auto-process error:', error);
+          });
+        }, 100);
+      }
+    };
+    
+    window.addEventListener('online', this.onlineHandler);
   }
 
   /**
@@ -294,6 +324,12 @@ export class RequestLedger {
     
     this.isDestroyed = true;
     this.replayEngine.pause();
+    
+    // Remove online event listener
+    if (this.onlineHandler && typeof window !== 'undefined') {
+      window.removeEventListener('online', this.onlineHandler);
+      this.onlineHandler = null;
+    }
     
     // Close storage if it has a close method
     if ('close' in this.storage && typeof this.storage.close === 'function') {

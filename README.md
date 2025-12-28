@@ -91,6 +91,15 @@ const ledger = createLedger({
 
   // Optional: idempotency header name (default: 'X-Idempotency-Key')
   idempotencyHeader: "X-Idempotency-Key",
+
+  // Optional: auto-process when coming back online (default: false)
+  autoProcess: true,
+
+  // Optional: options used for auto-processing
+  autoProcessOptions: {
+    concurrency: 1,
+    stopOnError: false,
+  },
 });
 ```
 

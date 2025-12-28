@@ -1,6 +1,6 @@
 {
   "name": "request-ledger",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Durable, client-side HTTP request ledger for web applications operating on unreliable networks",
   "type": "module",
   "main": "./dist/index.cjs",

@@ -328,6 +328,20 @@ export interface LedgerConfig {
    * @default "X-Idempotency-Key"
    */
   idempotencyHeader?: string;
+  
+  /**
+   * Automatically process pending entries when coming back online.
+   * When enabled, the ledger will listen for the browser's 'online' event
+   * and automatically start processing pending entries.
+   * @default false
+   */
+  autoProcess?: boolean;
+  
+  /**
+   * Options to use when auto-processing.
+   * Only used if autoProcess is true.
+   */
+  autoProcessOptions?: ProcessOptions;
 }
 
 // =============================================================================
